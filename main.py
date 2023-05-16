@@ -25,7 +25,7 @@ def parse_rss(url: str):
         link = feed_item.find("link").text
         published = feed_item.find("pubDate").text
         content = feed_item.find("content:encoded",
-                                 namespaces={"content": "http://purl.org/rss/1.0/modules/content/"}).text
+                                 namespaces={"content": "http://purl.org/rss/1.0/modules/content/"})
         if content is None:
             html_content = requests.get(link).text
             soup = BeautifulSoup(html_content, "html.parser")
@@ -33,7 +33,7 @@ def parse_rss(url: str):
             with_html_noise = True
         else:
             # remove all html tags
-            content = re.sub("<.*?>", '', content)
+            content = re.sub("<.*?>", '', content.text)
             with_html_noise = False
 
         feed_items.append(FeedItem(title=title,
@@ -60,14 +60,14 @@ def gen_summary_via_llm(feed_item: FeedItem):
                           "{text}" \
                           "\n```\n" \
                           "文章是从微信公众号获取的，有一些噪音，你可以忽略它们，例如：“参考资料：....”, “预览时标签不可点”, “微信扫一扫关注该公众号”, “编辑：....”和 “轻点两下取消在看”。" \
-                          "请先清理噪音，然后再根据清理完的文本来总结。文章总结不要超过200字。结果请严格按照JSON格式返回，格式如下：\n" \
-                          "{ \"cleaned_text\": \"清理完的文本\", \"summary\": \"文章的总结\" }"
+                          "请先清理噪音，然后再根据清理完的文本来总结。文章总结不要超过300字。结果请严格按照JSON格式返回，格式如下：\n" \
+                          "{{ \"cleaned_text\": \"清理完的文本\", \"summary\": \"文章的总结\" }}"
     else:
         prompt_template = "帮我总结一下这篇文章，这篇文章的题目是{title}：```\n" \
                           "{text}" \
                           "\n```\n" \
-                          "文章总结不要超过200字。结果请严格按照JSON格式返回，格式如下：\n" \
-                          "{ \"summary\": \"文章的总结\" }"
+                          "文章总结不要超过300字。结果请严格按照JSON格式返回，格式如下：\n" \
+                          "{{ \"summary\": \"文章的总结\" }}"
 
     prompt = prompt_template.format(title=feed_item.title, text=feed_item.content)
     response = openai.ChatCompletion.create(
