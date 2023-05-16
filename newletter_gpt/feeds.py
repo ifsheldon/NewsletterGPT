@@ -27,6 +27,15 @@ class FeedItem:
     summary: Optional[str] = None
     tags: Optional[Tags] = None
 
+    def __eq__(self, other):
+        if isinstance(other, FeedItem):
+            return self.link == other.link
+        else:
+            return False
+
+    def __hash__(self):
+        return hash(self.link)
+
 
 class FeedSource:
     def __init__(self, name: str, url: str):
