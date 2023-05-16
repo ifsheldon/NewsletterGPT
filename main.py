@@ -13,6 +13,15 @@ import openai
 import json
 
 
+@dataclass
+class Tags:
+    aigc: bool
+    digital_human: bool
+    neural_rendering: bool
+    computer_graphics: bool
+    computer_vision: bool
+
+
 def parse_rss(url: str):
     response = requests.get(url)
     root = ET.fromstring(response.text)
@@ -52,6 +61,7 @@ class FeedItem:
     with_html_noise: bool
     content: str
     summary: Optional[str] = None
+    tags: Optional[Tags] = None
 
 
 def gen_summary_via_llm(feed_item: FeedItem):
@@ -77,6 +87,39 @@ def gen_summary_via_llm(feed_item: FeedItem):
     )
     response_json = json.loads(response.choices[0]["message"]["content"])
     feed_item.summary = response_json["summary"]
+
+
+def get_tags_via_llm(feed_item: FeedItem):
+    prompt_template = "帮我给这篇文章打标签。\n" \
+                      "文章标签：```{title}```\n" \
+                      "文章内容：```{content}```\n" \
+                      "文章总结：```{summary}```\n" \
+                      "可用的标签有：\n" \
+                      "* aigc: 生成式人工智能相关，例如大语言模型，文生图模型等的相关内容\n" \
+                      "* digital_human: 数字人相关，例如数字人，动作捕捉，面部捕捉，数字人形艺术等的相关内容\n" \
+                      "* neural_rendering: 神经渲染相关，例如神经渲染，神经渲染器，NeRF等的相关内容\n" \
+                      "* computer_graphics: 计算机图形学相关，例如计算机图形学，渲染器，渲染等的相关内容\n" \
+                      "* computer_vision: 计算机视觉相关，例如计算机视觉，目标检测，图像分割等的相关内容\n" \
+                      "一篇文章可以有多个相关标签，也可以和所有标签都不相关，如果文章和一个标签相关，那么就返回true，否则返回false。" \
+                      "请将文章的所有标签严格按照JSON格式返回，一个例子是: " \
+                      "{{\"aigc\": true, " \
+                      "\"digital_human\": false, " \
+                      "\"neural_rendering\": true, " \
+                      "\"computer_graphics\": false, " \
+                      "\"computer_vision\": false,}}\n"
+
+    prompt = prompt_template.format(title=feed_item.title, content=feed_item.content, summary=feed_item.summary)
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        temperature=0.1,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    response_json = json.loads(response.choices[0]["message"]["content"])
+    feed_item.tags = Tags(aigc=response_json["aigc"],
+                          digital_human=response_json["digital_human"],
+                          neural_rendering=response_json["neural_rendering"],
+                          computer_graphics=response_json["computer_graphics"],
+                          computer_vision=response_json["computer_vision"])
 
 
 class FeedSource:
