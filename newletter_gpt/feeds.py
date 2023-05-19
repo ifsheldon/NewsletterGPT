@@ -41,7 +41,7 @@ class FeedItem:
     def __hash__(self):
         return hash(self.link)
 
-    def to_json(self, feed_source: Optional[str]=None):
+    def to_json(self, feed_source: Optional[str] = None):
         assert self.summary is not None, "Get summary first and then parse it into JSON"
         data_dict = {
             "title": self.title,
