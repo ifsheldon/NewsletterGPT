@@ -18,7 +18,7 @@ class Tags:
     computer_vision: bool
     robotics: bool
 
-    def to_json(self):
+    def to_json(self) -> str:
         return json.dumps(self.__dict__, ensure_ascii=False)
 
 
@@ -41,7 +41,12 @@ class FeedItem:
     def __hash__(self):
         return hash(self.link)
 
-    def to_json(self, feed_source: Optional[str] = None):
+    def to_json(self, feed_source: Optional[str] = None) -> str:
+        """
+        Parse the feed item into a JSON string. Need to use gen_summary_via_llm() first, to ensure that we have a summary.
+        :param feed_source: the source of the feed
+        :return: JSON string
+        """
         assert self.summary is not None, "Get summary first and then parse it into JSON"
         data_dict = {
             "title": self.title,
@@ -54,7 +59,11 @@ class FeedItem:
             data_dict["source"] = feed_source
         return json.dumps(data_dict, ensure_ascii=False)
 
-    def is_relevant(self):
+    def is_relevant(self) -> bool:
+        """
+        Check if the feed item is relevant to the topic of the newsletter. Need to use get_tags_via_llm() first, to ensure that we have tags.
+        :return: a boolean value
+        """
         assert self.tags is not None, "Get tags first"
         tags = self.tags
         return (tags.aigc or tags.digital_human or tags.neural_rendering or tags.computer_graphics or tags.computer_vision) and not tags.robotics
@@ -67,6 +76,10 @@ class FeedSource:
         self.last_update_time: Optional[datetime] = None
 
     def get_feeds(self) -> (List[FeedItem], bool, List[FeedItem]):
+        """
+        Get the feeds from the source. If the source is updated, return the new feeds.
+        :return: all feeds, whether the source is updated, new feeds
+        """
         feed_items = parse_rss(self.url)
         latest_update_time = max(feed_items, key=lambda x: x.published).published
         if self.last_update_time is None:
@@ -81,7 +94,12 @@ class FeedSource:
                 return feed_items, False, []
 
 
-def parse_rss(url: str):
+def parse_rss(url: str) -> List[FeedItem]:
+    """
+    Parse the RSS feed from the url.
+    :param url: URL to RSS feed
+    :return: feed items
+    """
     response = requests.get(url)
     root = ET.fromstring(response.text)
     root = list(root)[0]
@@ -95,6 +113,7 @@ def parse_rss(url: str):
         content = feed_item.find("content:encoded",
                                  namespaces={"content": "http://purl.org/rss/1.0/modules/content/"})
         if content is None:
+            # if there is no content tag, then we need to parse the html content
             html_content = requests.get(link).text
             soup = BeautifulSoup(html_content, "html.parser")
             content = soup.get_text()

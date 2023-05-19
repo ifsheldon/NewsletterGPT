@@ -4,6 +4,11 @@ from newletter_gpt.feeds import FeedItem, Tags
 
 
 def gen_summary_via_llm(feed_item: FeedItem):
+    """
+    Generate summary for a feed item via LLM (now gpt-3.5-turbo)
+    :param feed_item: the feed item to be summarized, modified in place
+    :return: None
+    """
     if feed_item.with_html_noise:
         prompt_template = "帮我总结一下这篇文章，这篇文章的题目是{title}：```\n" \
                           "{text}" \
@@ -32,6 +37,11 @@ def gen_summary_via_llm(feed_item: FeedItem):
 
 
 def get_tags_via_llm(feed_item: FeedItem):
+    """
+    Get tags for a feed item via LLM (now gpt-3.5-turbo)
+    :param feed_item: the feed item to be tagged, modified in place
+    :return: None
+    """
     prompt_template = "帮我给这篇文章打标签。\n" \
                       "文章标签：```{title}```\n" \
                       "文章内容：```{content}```\n" \
