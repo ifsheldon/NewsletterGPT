@@ -6,6 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 from dateutil.parser import parse as parse_datetime_from_string
 import re
+import json
 
 
 @dataclass
@@ -15,6 +16,10 @@ class Tags:
     neural_rendering: bool
     computer_graphics: bool
     computer_vision: bool
+
+
+    def to_json(self):
+        return json.dumps(self.__dict__, ensure_ascii=False)
 
 
 @dataclass
@@ -35,6 +40,19 @@ class FeedItem:
 
     def __hash__(self):
         return hash(self.link)
+
+    def to_json(self, feed_source: Optional[str]=None):
+        assert self.summary is not None, "Get summary first and then parse it into JSON"
+        data_dict = {
+            "title": self.title,
+            "link": self.link,
+            "publishTime": self.published.strftime('%Y-%m-%d'),
+            "summary": self.summary,
+            "tags": None if self.tags is None else self.tags.to_json(),
+        }
+        if feed_source is not None:
+            data_dict["source"] = feed_source
+        return json.dumps(data_dict, ensure_ascii=False)
 
 
 class FeedSource:
