@@ -1,1 +1,4 @@
 python-dateutil
+requests
+beautifulsoup4
+openai
