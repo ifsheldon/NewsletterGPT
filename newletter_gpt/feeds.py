@@ -16,7 +16,7 @@ class Tags:
     neural_rendering: bool
     computer_graphics: bool
     computer_vision: bool
-
+    robotics: bool
 
     def to_json(self):
         return json.dumps(self.__dict__, ensure_ascii=False)
@@ -53,6 +53,11 @@ class FeedItem:
         if feed_source is not None:
             data_dict["source"] = feed_source
         return json.dumps(data_dict, ensure_ascii=False)
+
+    def is_relevant(self):
+        assert self.tags is not None, "Get tags first"
+        tags = self.tags
+        return (tags.aigc or tags.digital_human or tags.neural_rendering or tags.computer_graphics or tags.computer_vision) and not tags.robotics
 
 
 class FeedSource:
