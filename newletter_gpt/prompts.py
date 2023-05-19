@@ -24,7 +24,10 @@ def gen_summary_via_llm(feed_item: FeedItem):
         temperature=0.1,
         messages=[{"role": "user", "content": prompt}],
     )
-    response_json = json.loads(response.choices[0]["message"]["content"])
+    # process response
+    processed_response = response.choices[0]["message"]["content"].replace("`", "")
+    response_json = json.loads(processed_response)
+    # set summary
     feed_item.summary = response_json["summary"]
 
 
@@ -38,14 +41,16 @@ def get_tags_via_llm(feed_item: FeedItem):
                       "* digital_human: 数字人相关，例如数字人，动作捕捉，面部捕捉，数字人形艺术等的相关内容\n" \
                       "* neural_rendering: 神经渲染相关，例如神经渲染器，NeRF，可微分渲染等的相关内容\n" \
                       "* computer_graphics: 计算机图形学相关，例如渲染器，渲染，几何处理，图像处理等的相关内容\n" \
-                      "* computer_vision: 计算机视觉相关，例如图像分类，目标检测，图像分割，语义分割，深度估计等的相关内容。注意，脑机接口相关内容不属于计算机视觉的范畴。\n" \
+                      "* computer_vision: 计算机视觉相关，例如图像分类，目标检测，图像分割，语义分割，深度估计等的相关内容。注意: 脑机接口相关内容不属于计算机视觉的范畴。\n" \
+                      "* robotics: 和机器人相关，例如机器狗，机械，类人机器等的相关内容。\n" \
                       "一篇文章可以有多个相关标签，也可以和所有标签都不相关，如果文章和一个标签相关，那么就返回true，否则返回false。" \
-                      "请将文章的所有标签严格按照JSON格式返回，一个例子是: " \
+                      "请将文章的所有标签严格按照JSON格式返回，不要添加额外的符号。一个合规的例子是: " \
                       "{{\"aigc\": true, " \
                       "\"digital_human\": false, " \
                       "\"neural_rendering\": true, " \
                       "\"computer_graphics\": false, " \
-                      "\"computer_vision\": false,}}\n"
+                      "\"computer_vision\": false, " \
+                      "\"robotics\": false, }}\n"
 
     prompt = prompt_template.format(title=feed_item.title, content=feed_item.content, summary=feed_item.summary)
     response = openai.ChatCompletion.create(
@@ -53,9 +58,13 @@ def get_tags_via_llm(feed_item: FeedItem):
         temperature=0.1,
         messages=[{"role": "user", "content": prompt}],
     )
-    response_json = json.loads(response.choices[0]["message"]["content"])
+    # process response
+    processed_response = response.choices[0]["message"]["content"].replace("`", "")
+    response_json = json.loads(processed_response)
+    # set tags
     feed_item.tags = Tags(aigc=response_json["aigc"],
                           digital_human=response_json["digital_human"],
                           neural_rendering=response_json["neural_rendering"],
                           computer_graphics=response_json["computer_graphics"],
-                          computer_vision=response_json["computer_vision"])
+                          computer_vision=response_json["computer_vision"],
+                          robotics=response_json["robotics"])
