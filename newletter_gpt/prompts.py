@@ -3,7 +3,7 @@ import json
 from newletter_gpt.feeds import FeedItem, Tags
 
 
-def gen_summary_via_llm(feed_item: FeedItem):
+def gen_summary_via_llm(feed_item: FeedItem, **extra_args_to_openai):
     """
     Generate summary for a feed item via LLM (now gpt-3.5-turbo)
     :param feed_item: the feed item to be summarized, modified in place
@@ -28,6 +28,7 @@ def gen_summary_via_llm(feed_item: FeedItem):
         model="gpt-3.5-turbo",
         temperature=0.1,
         messages=[{"role": "user", "content": prompt}],
+        **extra_args_to_openai
     )
     # process response
     processed_response = response.choices[0]["message"]["content"].replace("`", "")
@@ -36,7 +37,7 @@ def gen_summary_via_llm(feed_item: FeedItem):
     feed_item.summary = response_json["summary"]
 
 
-def get_tags_via_llm(feed_item: FeedItem):
+def get_tags_via_llm(feed_item: FeedItem, **extra_args_to_openai):
     """
     Get tags for a feed item via LLM (now gpt-3.5-turbo)
     :param feed_item: the feed item to be tagged, modified in place
@@ -67,6 +68,7 @@ def get_tags_via_llm(feed_item: FeedItem):
         model="gpt-3.5-turbo",
         temperature=0.1,
         messages=[{"role": "user", "content": prompt}],
+        **extra_args_to_openai
     )
     # process response
     processed_response = response.choices[0]["message"]["content"].replace("`", "")
