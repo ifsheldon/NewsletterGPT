@@ -123,6 +123,8 @@ def parse_rss(url: str) -> List[FeedItem]:
             content = re.sub("<.*?>", '', content.text)
             with_html_noise = False
 
+        content = re.sub(r"&\w+;", "", content)
+
         feed_items.append(FeedItem(title=title,
                                    link=link,
                                    published=parse_datetime_from_string(published),
