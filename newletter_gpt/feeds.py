@@ -17,6 +17,7 @@ class Tags:
     computer_graphics: bool
     computer_vision: bool
     robotics: bool
+    consumer_electronics: bool
 
     def to_json(self) -> str:
         return json.dumps(self.__dict__, ensure_ascii=False)
