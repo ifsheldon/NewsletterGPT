@@ -1,82 +1,84 @@
-import openai
-import json
 from newletter_gpt.feeds import FeedItem, Tags
+import guidance
 
 
-def gen_summary_via_llm(feed_item: FeedItem, **extra_args_to_openai):
-    """
-    Generate summary for a feed item via LLM (now gpt-3.5-turbo)
-    :param feed_item: the feed item to be summarized, modified in place
-    :return: None
-    """
+def gen_summary_and_tags_via_llm(feed_item: FeedItem):
+    # Notice: NEED TO MODIFY guidance/llms/_openai.py:315 IF YOU ARE USING AZURE OPENAI SERVICE
+    # truncate content, max 1900 Chinese and English character
+    item_content = feed_item.content[:1900]
     if feed_item.with_html_noise:
-        prompt_template = "帮我总结一下这篇文章，这篇文章的题目是{title}：```\n" \
-                          "{text}" \
-                          "\n```\n" \
-                          "文章是从微信公众号获取的，有一些噪音，你可以忽略它们，例如：“参考资料：....”, “预览时标签不可点”, “微信扫一扫关注该公众号”, “编辑：....”和 “轻点两下取消在看”。" \
-                          "请先清理噪音，然后再根据清理完的文本来总结。文章总结不要超过300字。结果请严格按照JSON格式返回，格式如下：\n" \
-                          "{{ \"cleaned_text\": \"清理完的文本\", \"summary\": \"文章的总结\" }}"
+        create_plan = guidance('''
+        文章题目：{{title}}
+        文章全文：```
+        {{content}}
+        ```
+    
+        文章是从微信公众号获取的，有一些可以忽略的噪音，例如：“参考资料：....”, “预览时标签不可点”, “微信扫一扫关注该公众号”, “编辑：....”和 “轻点两下取消在看”。
+    
+        简短的文章总结如下：{{gen 'summary' temperature=0.1 max_tokens=400}}
+    
+        根据以上信息，给文章打标签。可用的标签有：
+        aigc: 生成式AI，大语言模型，文生图模型等的相关内容
+        digital_human: 数字人，动作捕捉，面部捕捉，数字人形艺术等的相关内容
+        neural_rendering: 神经渲染器，NeRF，可微分渲染等的相关内容
+        computer_graphics: 图形学，渲染器，渲染，几何处理，图像处理等的相关内容
+        computer_vision: 计算机视觉，图像分类，目标检测，图像分割，语义分割，深度估计等的相关内容。注意: 脑机接口相关内容不属于计算机视觉的范畴
+        robotics: 机器人，机器狗，机械，类人机器等的相关内容
+        consumer_electronics: 消费电子，智能手机，智能手表等内容
+    
+        一篇文章可以有多个相关标签，也可以和所有标签都不相关。如果文章和一个标签相关，返回1，否则返回0。文章的所有标签严格按照JSON格式返回。
+    
+        该文章分类的标签如下：{
+        "aigc" : {{#select 'aigc'}}1{{or}}0{{/select}},
+        "digital_human" : {{#select 'digital_human'}}1{{or}}0{{/select}},
+        "neural_rendering" : {{#select 'neural_rendering'}}1{{or}}0{{/select}},
+        "computer_graphics" : {{#select 'computer_graphics'}}1{{or}}0{{/select}},
+        "computer_vision" : {{#select 'computer_vision'}}1{{or}}0{{/select}},
+        "robotics" : {{#select 'robotics'}}1{{or}}0{{/select}},
+        "consumer_electronics" : {{#select 'consumer_electronics'}}1{{or}}0{{/select}},
+        }
+        ''')
     else:
-        prompt_template = "帮我总结一下这篇文章，这篇文章的题目是{title}：```\n" \
-                          "{text}" \
-                          "\n```\n" \
-                          "文章总结不要超过300字。结果请严格按照JSON格式返回，格式如下：\n" \
-                          "{{ \"summary\": \"文章的总结\" }}"
+        create_plan = guidance('''
+        文章题目：{{title}}
+        文章全文：```
+        {{content}}
+        ```
+    
+        简短的文章总结如下：{{gen 'summary' temperature=0.1 max_tokens=400}}
+    
+        根据以上信息，给文章打标签。可用的标签有：
+        aigc: 生成式AI，大语言模型，文生图模型等的相关内容
+        digital_human: 数字人，动作捕捉，面部捕捉，数字人形艺术等的相关内容
+        neural_rendering: 神经渲染器，NeRF，可微分渲染等的相关内容
+        computer_graphics: 图形学，渲染器，渲染，几何处理，图像处理等的相关内容
+        computer_vision: 计算机视觉，图像分类，目标检测，图像分割，语义分割，深度估计等的相关内容。注意: 脑机接口相关内容不属于计算机视觉的范畴
+        robotics: 机器人，机器狗，机械，类人机器等的相关内容
+        consumer_electronics: 消费电子，智能手机，智能手表等内容
+    
+        一篇文章可以有多个相关标签，也可以和所有标签都不相关。如果文章和一个标签相关，返回1，否则返回0。文章的所有标签严格按照JSON格式返回。
+    
+        该文章分类的标签如下：{
+        "aigc" : {{#select 'aigc'}}1{{or}}0{{/select}},
+        "digital_human" : {{#select 'digital_human'}}1{{or}}0{{/select}},
+        "neural_rendering" : {{#select 'neural_rendering'}}1{{or}}0{{/select}},
+        "computer_graphics" : {{#select 'computer_graphics'}}1{{or}}0{{/select}},
+        "computer_vision" : {{#select 'computer_vision'}}1{{or}}0{{/select}},
+        "robotics" : {{#select 'robotics'}}1{{or}}0{{/select}},
+        "consumer_electronics" : {{#select 'consumer_electronics'}}1{{or}}0{{/select}},
+        }
+        ''')
 
-    prompt = prompt_template.format(title=feed_item.title, text=feed_item.content)
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        temperature=0.1,
-        messages=[{"role": "user", "content": prompt}],
-        **extra_args_to_openai
-    )
-    # process response
-    processed_response = response.choices[0]["message"]["content"].replace("`", "")
-    response_json = json.loads(processed_response)
-    # set summary
-    feed_item.summary = response_json["summary"]
-
-
-def get_tags_via_llm(feed_item: FeedItem, **extra_args_to_openai):
-    """
-    Get tags for a feed item via LLM (now gpt-3.5-turbo)
-    :param feed_item: the feed item to be tagged, modified in place
-    :return: None
-    """
-    prompt_template = "帮我给这篇文章打标签。\n" \
-                      "文章标签：```{title}```\n" \
-                      "文章内容：```{content}```\n" \
-                      "文章总结：```{summary}```\n" \
-                      "可用的标签有：\n" \
-                      "* aigc: 生成式人工智能相关，例如大语言模型，文生图模型等的相关内容\n" \
-                      "* digital_human: 数字人相关，例如数字人，动作捕捉，面部捕捉，数字人形艺术等的相关内容\n" \
-                      "* neural_rendering: 神经渲染相关，例如神经渲染器，NeRF，可微分渲染等的相关内容\n" \
-                      "* computer_graphics: 计算机图形学相关，例如渲染器，渲染，几何处理，图像处理等的相关内容\n" \
-                      "* computer_vision: 计算机视觉相关，例如图像分类，目标检测，图像分割，语义分割，深度估计等的相关内容。注意: 脑机接口相关内容不属于计算机视觉的范畴。\n" \
-                      "* robotics: 和机器人相关，例如机器狗，机械，类人机器等的相关内容。\n" \
-                      "一篇文章可以有多个相关标签，也可以和所有标签都不相关，如果文章和一个标签相关，那么就返回true，否则返回false。" \
-                      "请将文章的所有标签严格按照JSON格式返回，不要添加额外的符号。一个合规的例子是: " \
-                      "{{\"aigc\": true, " \
-                      "\"digital_human\": false, " \
-                      "\"neural_rendering\": true, " \
-                      "\"computer_graphics\": false, " \
-                      "\"computer_vision\": false, " \
-                      "\"robotics\": false, }}\n"
-
-    prompt = prompt_template.format(title=feed_item.title, content=feed_item.content, summary=feed_item.summary)
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        temperature=0.1,
-        messages=[{"role": "user", "content": prompt}],
-        **extra_args_to_openai
-    )
-    # process response
-    processed_response = response.choices[0]["message"]["content"].replace("`", "")
-    response_json = json.loads(processed_response)
-    # set tags
-    feed_item.tags = Tags(aigc=response_json["aigc"],
-                          digital_human=response_json["digital_human"],
-                          neural_rendering=response_json["neural_rendering"],
-                          computer_graphics=response_json["computer_graphics"],
-                          computer_vision=response_json["computer_vision"],
-                          robotics=response_json["robotics"])
+    output = create_plan(title=feed_item.title, content=item_content)
+    summary = output["summary"]
+    feed_item.summary = summary
+    aigc = int(output["aigc"]) == 1
+    digital_human = int(output["digital_human"]) == 1
+    neural_rendering = int(output["neural_rendering"]) == 1
+    computer_graphics = int(output["computer_graphics"]) == 1
+    computer_vision = int(output["computer_vision"]) == 1
+    robotics = int(output["robotics"]) == 1
+    consumer_electronics = int(output["consumer_electronics"]) == 1
+    tags = Tags(aigc, digital_human, neural_rendering, computer_graphics, computer_vision, robotics,
+                consumer_electronics)
+    feed_item.tags = tags
