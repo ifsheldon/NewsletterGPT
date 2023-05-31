@@ -59,15 +59,6 @@ class FeedItem:
             data_dict["source"] = feed_source
         return json.dumps(data_dict, ensure_ascii=False)
 
-    def is_relevant(self) -> bool:
-        """
-        Check if the feed item is relevant to the topic of the newsletter. Need to use get_tags_via_llm() first, to ensure that we have tags.
-        :return: a boolean value
-        """
-        assert self.tags is not None, "Get tags first"
-        tags = self.tags
-        return (tags.aigc or tags.digital_human or tags.neural_rendering or tags.computer_graphics or tags.computer_vision) and not tags.robotics
-
 
 class FeedSource:
     def __init__(self, name: str, url: str):
