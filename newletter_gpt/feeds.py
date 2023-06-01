@@ -94,7 +94,11 @@ def parse_rss(url: str, source: str) -> List[FeedItem]:
     :param source: the name of the source
     :return: feed items
     """
-    response = requests.get(url)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/113.0"
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
     root = ET.fromstring(response.text)
     root = list(root)[0]
     channel_items = list(root)
