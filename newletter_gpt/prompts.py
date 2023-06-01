@@ -4,8 +4,8 @@ import guidance
 
 def gen_summary_and_tags_via_llm(feed_item: FeedItem):
     # Notice: NEED TO MODIFY guidance/llms/_openai.py:315 IF YOU ARE USING AZURE OPENAI SERVICE
-    # truncate content, max 1500 Chinese and English character
-    item_content = feed_item.content[:1500]
+    # truncate content, max 1000 Chinese and English character
+    item_content = feed_item.content[:1000]
     create_plan = guidance('''
 文章题目：{{title}}
 文章全文：```
@@ -13,7 +13,7 @@ def gen_summary_and_tags_via_llm(feed_item: FeedItem):
 ```
 {{extra_note}}
 
-简短的文章总结如下：{{gen 'summary' temperature=0.1 max_tokens=400}}
+简短的文章总结(不超过400字)如下：{{gen 'summary' temperature=0.1 max_tokens=400}}
 
 根据以上信息，给文章打标签。可用的标签有：
 aigc: 生成式AI，大语言模型，文生图模型等的相关内容
