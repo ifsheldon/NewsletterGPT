@@ -4,8 +4,8 @@ import guidance
 
 def gen_summary_and_tags_via_llm(feed_item: FeedItem):
     # Notice: NEED TO MODIFY guidance/llms/_openai.py:315 IF YOU ARE USING AZURE OPENAI SERVICE
-    # truncate content, max 1900 Chinese and English character
-    item_content = feed_item.content[:1900]
+    # truncate content, max 1500 Chinese and English character
+    item_content = feed_item.content[:1500]
     create_plan = guidance('''
 文章题目：{{title}}
 文章全文：```
