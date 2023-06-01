@@ -30,6 +30,7 @@ class FeedItem:
     published: datetime
     with_html_noise: bool
     content: str
+    source: str
     summary: Optional[str] = None
     tags: Optional[Tags] = None
 
@@ -72,7 +73,7 @@ class FeedSource:
         Get the feeds from the source. If the source is updated, return the new feeds.
         :return: all feeds, whether the source is updated, new feeds
         """
-        feed_items = parse_rss(self.url)
+        feed_items = parse_rss(self.url, self.name)
         latest_update_time = max(feed_items, key=lambda x: x.published).published
         if self.last_update_time is None:
             self.last_update_time = latest_update_time
@@ -86,10 +87,11 @@ class FeedSource:
                 return feed_items, False, []
 
 
-def parse_rss(url: str) -> List[FeedItem]:
+def parse_rss(url: str, source: str) -> List[FeedItem]:
     """
     Parse the RSS feed from the url.
     :param url: URL to RSS feed
+    :param source: the name of the source
     :return: feed items
     """
     response = requests.get(url)
@@ -121,5 +123,6 @@ def parse_rss(url: str) -> List[FeedItem]:
                                    link=link,
                                    published=parse_datetime_from_string(published),
                                    with_html_noise=with_html_noise,
-                                   content=content))
+                                   content=content,
+                                   source=source))
     return feed_items
