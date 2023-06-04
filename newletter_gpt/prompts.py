@@ -1,20 +1,36 @@
 from newletter_gpt.feeds import FeedItem, Tags
 import guidance
+import logging
 
+logger = logging.getLogger("NewsletterGPT")
 
-def gen_summary_and_tags_via_llm(feed_item: FeedItem):
+def gen_summary_and_tags_via_llm(feed_item: FeedItem, api_base: str, api_key: str):
     # Notice: NEED TO MODIFY guidance/llms/_openai.py:315 IF YOU ARE USING AZURE OPENAI SERVICE
-    # truncate content, max 1000 Chinese and English character
-    item_content = feed_item.content[:1200]
+    # truncate content, max 3000 Chinese and English character
+    item_content = feed_item.content[:3000]
+    logger.info(f"Generating summary for {feed_item.title}")
+    guidance.llm = guidance.llms.OpenAI(model="gpt-3.5-turbo",
+                                        api_base=api_base,
+                                        api_type="azure",
+                                        api_version="2023-03-15-preview",
+                                        api_key=api_key)
     create_plan = guidance('''
+{{#user~}}
 文章题目：{{title}}
 文章全文：```
 {{content}}
 ```
 {{extra_note}}
 
-简短的文章总结(不超过400字)如下：{{gen 'summary' temperature=0.1 max_tokens=500}}
-}''')
+英文专业名词要保留，然后请用中文生成简短的不超过300字的文章总结。
+
+文章总结：
+{{~/user}}
+
+{{#assistant~}}
+{{gen 'summary' temperature=0.1 max_tokens=500}}
+{{~/assistant}}
+''')
 
     if feed_item.with_html_noise:
         extra = "\n文章是从微信公众号获取的，有一些可以忽略的噪音，例如：“参考资料：....”, “预览时标签不可点”, “微信扫一扫关注该公众号”, “编辑：....”和 “轻点两下取消在看”。"
@@ -27,6 +43,15 @@ def gen_summary_and_tags_via_llm(feed_item: FeedItem):
     summary = output["summary"]
     feed_item.summary = summary
 
+    logger.info(f"Generating tags for {feed_item.title}")
+    guidance.llm = guidance.llms.OpenAI(model="text-davinci-003",
+                                        api_base=api_base,
+                                        api_type="azure",
+                                        api_version="2022-12-01",
+                                        api_key=api_key)
+
+    # truncate content, max 1200 Chinese and English character
+    item_content = feed_item.content[:1200]
     create_plan = guidance("""
 文章题目：{{title}}
 文章全文：```
