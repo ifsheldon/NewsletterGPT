@@ -7,7 +7,7 @@ Get a newsletter summarized by GPT from multiple RSS sources.
 2. Install dependencies `pip install -r requirements.txt`.
 3. You will need to have an Azure OpenAI Service API key.
     * A OpenAI Key is also fine, but the code now only accepts an Azure OpenAI Service API key for now. PRs are welcome.
-    * Modify the code in dependency `guidance`.
+    * Modify the code in dependency `guidance/llms/_openai.py`.
       ```python
          if self.chat_mode:
             kwargs['messages'] = prompt_to_messages(kwargs['prompt'])
