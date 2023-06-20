@@ -7,7 +7,10 @@ from bs4 import BeautifulSoup
 from dateutil.parser import parse as parse_datetime_from_string
 import re
 import json
-
+import easyocr
+import oss2
+import os
+from requests_html import HTMLSession
 
 @dataclass
 class Tags:
@@ -130,3 +133,93 @@ def parse_rss(url: str, source: str) -> List[FeedItem]:
                                    content=content,
                                    source=source))
     return feed_items
+
+
+def get_url(url):
+    img_url = "None"
+    if "qbitai" in url:
+        img_url = liangZiWei(url)
+    if "jiqizhixin" in url:
+        img_url = jiQi(url)
+    if "weixin" in url:
+        img_url = weiXin(url)
+    return img_url
+
+
+def liangZiWei(web):
+    urls=[]
+    headers = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36'
+    }
+
+    f = requests.get(web, headers=headers).text
+    s = BeautifulSoup(f,'lxml')
+    s_imgs = s.find_all('img')
+    for s_img in s_imgs:
+        if "http" not in s_img['src']:
+            img_url = 'http://www.qbitai.com' + s_img['src']
+            urls.append(img_url)
+
+    if len(urls)<2:
+        url ="None"
+    else:
+        url = urls[1]
+    return url
+
+def jiQi(web):
+    urls=[]
+    f = requests.get(web).text
+    s = BeautifulSoup(f,'lxml')
+    s_imgs = s.find_all('img',attrs = {'logo' : False})
+    for s_img in s_imgs:
+        if "editor" in s_img['src']:
+            img_url = s_img['src']
+            urls.append(img_url)
+    if urls==[]:
+        url = "None "
+    else:
+        url = urls[0]
+    return url
+
+def weiXin(web): 
+    session = HTMLSession()
+    r = session.get(web)
+    r.html.render() 
+    html_content = r.html.html
+    s_imgs = r.html.find('img')
+
+    urls=[]
+    for s_img in s_imgs:
+        if 'data-src' in s_img.attrs:
+            img_url = s_img.attrs['data-src'] 
+            urls.append(img_url)
+    if len(urls)<1:
+        url ="None"
+        return url
+    
+    url = urls[0]
+    html = requests.get(url)
+    name = web[27:]+'.jpg'
+    with open(name, 'wb') as file:
+        file.write(html.content)
+
+    reader = easyocr.Reader(['ch_sim','en']) 
+    result = reader.readtext(name)
+    if len(result)>1:
+        if len(result[1])>1:
+            if result[0][1] =='此图片来自微信公众平台':
+                url = "None"
+                return url
+    access_key_id = 'bo71Pp26DgpIT9vW'
+    access_key_secret = 'r2FaziaNDqBgv4kDQIjgAbcTazv0kB'
+    bucket_name = 'gempoll-ai'
+    endpoint = 'http://oss-cn-shanghai.aliyuncs.com'
+    auth = oss2.Auth(access_key_id, access_key_secret)
+    bucket = oss2.Bucket(auth, endpoint, bucket_name)
+
+    object_key = name
+    local_file = name
+    bucket.put_object_from_file(object_key, local_file)
+    url = 'https://gempoll-ai.oss-cn-shanghai.aliyuncs.com/'+name
+    os.remove(name)
+    return url

@@ -1,4 +1,4 @@
-from newletter_gpt.feeds import FeedSource
+from newletter_gpt.feeds import FeedSource,get_url
 from newletter_gpt.prompts import gen_summary_and_tags_via_llm
 import random
 import time
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         cursor.execute("SELECT link from ai_reports")
         links_in_db = cursor.fetchall()
         links_in_db = set(link[0] for link in links_in_db)
-        sql_op = "INSERT INTO ai_reports (title, link, publish_time, with_html_noise, content, source, summary, aigc, digital_human, neural_rendering, computer_graphics, computer_vision, robotics, consumer_electronics) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        sql_op = "INSERT INTO ai_reports (title, link, publish_time, with_html_noise, content, source, summary, aigc, digital_human, neural_rendering, computer_graphics, computer_vision, robotics, consumer_electronics,img_url) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s)"
         logger.info("Enter loop")
         while True:
             for feed_name, feed_source in feed_sources.items():
@@ -55,11 +55,12 @@ if __name__ == "__main__":
                                         or tags.neural_rendering or tags.digital_human) \
                                        and not (tags.consumer_electronics or tags.robotics)
                             if relevant:
+                                img_url = get_url(item.link)
                                 feed_data.append((item.title, item.link, item.published, item.with_html_noise,
                                                   item.content, item.source, item.summary,
                                                   item.tags.aigc, item.tags.digital_human, item.tags.neural_rendering,
                                                   item.tags.computer_graphics, item.tags.computer_vision,
-                                                  item.tags.robotics, item.tags.consumer_electronics))
+                                                  item.tags.robotics, item.tags.consumer_electronics,img_url))
                                 logger.info(f"Try to add one record:\n"
                                             f"  title: {item.title}\n"
                                             f"  link: {item.link}\n"
