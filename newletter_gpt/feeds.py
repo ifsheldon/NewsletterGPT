@@ -222,7 +222,7 @@ def xinZhiYuan(web_url,args):
     object_key = name
     local_file = name
     bucket.put_object_from_file(object_key, local_file)
-    url = (f"https://{args.bucket_name}.{args.endpoint}/{name}")
+    url = f"https://{args.bucket_name}.{args.endpoint}/{name}"
     os.remove(name)
 
     return url
