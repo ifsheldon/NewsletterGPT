@@ -136,13 +136,13 @@ def parse_rss(url: str, source: str) -> List[FeedItem]:
     return feed_items
 
 
-def get_img_url(item):
+def get_img_url(item,args):
     if item.source == "量子位":
         img_url = liangZiWei(item.link)
     elif item.source == "机器之心":
         img_url = jiQi(item.link)
     elif item.source == "新智元":
-        img_url = xinZhiYuan(item.link)
+        img_url = xinZhiYuan(item.link,args)
     else:
         img_url = 'None'
     return img_url
