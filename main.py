@@ -18,6 +18,10 @@ if __name__ == "__main__":
     parser.add_argument("--db", type=str)
     parser.add_argument("--api-base", type=str)
     parser.add_argument("--api-key", type=str)
+    parser.add_argument("--access_key_id", type=str)
+    parser.add_argument("--access_key_secret", type=str)
+    parser.add_argument("--bucket_name", type=str)
+    parser.add_argument("--endpoint", type=str)
     args = parser.parse_args()
 
     feed_sources = {
@@ -55,7 +59,7 @@ if __name__ == "__main__":
                                         or tags.neural_rendering or tags.digital_human) \
                                        and not (tags.consumer_electronics or tags.robotics)
                             if relevant:
-                                img_url = get_img_url(item)
+                                img_url = get_img_url(item,args)
                                 feed_data.append((item.title, item.link, item.published, item.with_html_noise,
                                                   item.content, item.source, item.summary,
                                                   item.tags.aigc, item.tags.digital_human, item.tags.neural_rendering,

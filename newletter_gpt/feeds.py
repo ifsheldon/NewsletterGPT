@@ -183,11 +183,10 @@ def jiQi(web_url):
         url = urls[0]
     return url
 
-def weiXin(web_url): 
+def weiXin(web_url,args): 
     session = HTMLSession()
     r = session.get(web_url)
     r.html.render() 
-    html_content = r.html.html
     s_imgs = r.html.find('img')
 
     urls=[]
@@ -213,12 +212,6 @@ def weiXin(web_url):
                 url = "None"
                 return url
 
-    parser = argparse.ArgumentParser(description="oss connecter")
-    parser.add_argument("--access_key_id", type=str)
-    parser.add_argument("--access_key_secret", type=str)
-    parser.add_argument("--bucket_name", type=str)
-    parser.add_argument("--endpoint", type=str)
-    args = parser.parse_args()
     auth = oss2.Auth(args.access_key_id, args.access_key_secret)
     bucket = oss2.Bucket(auth, args.endpoint, args.bucket_name)
 
