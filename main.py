@@ -25,9 +25,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     feed_sources = {
-        "机器之心": FeedSource("机器之心", "https://www.jiqizhixin.com/rss"),
-        "量子位": FeedSource("量子位", "https://www.qbitai.com/rss"),
-        "新智元": FeedSource("新智元", "https://feed.hamibot.com/api/feeds/61aa18e9486e3727fb090ba1"),
+        "机器之心":
+        FeedSource("机器之心", "https://www.jiqizhixin.com/rss"),
+        "量子位":
+        FeedSource("量子位", "https://www.qbitai.com/rss"),
+        "新智元":
+        FeedSource(
+            "新智元",
+            "https://feed.hamibot.com/api/feeds/61aa18e9486e3727fb090ba1"),
     }
 
     with mysql.connector.connect(user=args.db_user,
@@ -50,21 +55,29 @@ if __name__ == "__main__":
                         if item.link in links_in_db:
                             continue
                         try:
-                            logger.info(f"Try to generate tags and summary for {item.title}: {item.link}")
-                            gen_summary_and_tags_via_llm(item,
-                                                         api_base=args.api_base,
-                                                         api_key=args.api_key)
+                            logger.info(
+                                f"Try to generate tags and summary for {item.title}: {item.link}"
+                            )
+                            gen_summary_and_tags_via_llm(
+                                item,
+                                api_base=args.api_base,
+                                api_key=args.api_key)
                             tags = item.tags
                             relevant = (tags.aigc or tags.computer_vision or tags.computer_graphics
                                         or tags.neural_rendering or tags.digital_human) \
                                        and not (tags.consumer_electronics or tags.robotics)
                             if relevant:
-                                img_url = get_img_url(item,args)
-                                feed_data.append((item.title, item.link, item.published, item.with_html_noise,
-                                                  item.content, item.source, item.summary,
-                                                  item.tags.aigc, item.tags.digital_human, item.tags.neural_rendering,
-                                                  item.tags.computer_graphics, item.tags.computer_vision,
-                                                  item.tags.robotics, item.tags.consumer_electronics,img_url))
+                                img_url = get_img_url(item, args)
+                                feed_data.append(
+                                    (item.title, item.link, item.published,
+                                     item.with_html_noise, item.content,
+                                     item.source, item.summary, item.tags.aigc,
+                                     item.tags.digital_human,
+                                     item.tags.neural_rendering,
+                                     item.tags.computer_graphics,
+                                     item.tags.computer_vision,
+                                     item.tags.robotics,
+                                     item.tags.consumer_electronics, img_url))
                                 logger.info(f"Try to add one record:\n"
                                             f"  title: {item.title}\n"
                                             f"  link: {item.link}\n"
@@ -82,5 +95,7 @@ if __name__ == "__main__":
 
             # sleep for a random time between 12 and 24 hours
             sleep_time = random.randint(12, 24) * 60 * 60
-            logger.info(f"Sleeping for {sleep_time / (60 * 60)} hours and then check new update.")
+            logger.info(
+                f"Sleeping for {sleep_time / (60 * 60)} hours and then check new update."
+            )
             time.sleep(sleep_time)
