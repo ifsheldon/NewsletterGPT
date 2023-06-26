@@ -38,14 +38,16 @@ if __name__ == "__main__":
         logger.info("Enter loop")
         while True:
             for feed_name, feed_source in feed_sources.items():
-                feed_items, is_updated, new_items = feed_source.get_feeds()
-                if is_updated:
-                    # save relevant feeds
-                    feed_data = []
-                    for item in new_items:
-                        if item.link in links_in_db:
-                            continue
-                        try:
+                try:
+                    logger.info(f"Getting updates from {feed_source.name}")
+                    feed_items, is_updated, new_items = feed_source.get_feeds()
+                    if is_updated:
+                        # save relevant feeds
+                        feed_data = []
+                        for item in new_items:
+                            if item.link in links_in_db:
+                                continue
+
                             logger.info(f"Try to generate tags and summary for {item.title}: {item.link}")
                             gen_summary_and_tags_via_llm(item,
                                                          api_base=args.api_base,
@@ -57,7 +59,8 @@ if __name__ == "__main__":
                             if relevant:
                                 feed_data.append((item.title, item.link, item.published, item.with_html_noise,
                                                   item.content, item.source, item.summary,
-                                                  item.tags.aigc, item.tags.digital_human, item.tags.neural_rendering,
+                                                  item.tags.aigc, item.tags.digital_human,
+                                                  item.tags.neural_rendering,
                                                   item.tags.computer_graphics, item.tags.computer_vision,
                                                   item.tags.robotics, item.tags.consumer_electronics))
                                 logger.info(f"Try to add one record:\n"
@@ -65,15 +68,13 @@ if __name__ == "__main__":
                                             f"  link: {item.link}\n"
                                             f"  published: {item.published}\n"
                                             f"  source: {item.source}\n\n")
-                        except Exception as e:
-                            logger.warning(f"exception throws: {e}")
 
-                    try:
                         if len(feed_data) > 0:
                             cursor.executemany(sql_op, feed_data)
                             conn.commit()
-                    except Exception as e:
-                        logger.warning(f"exception throws: {e}")
+
+                except Exception as e:
+                    logger.warning(f"exception throws: {e}")
 
             # sleep for a random time between 12 and 24 hours
             sleep_time = random.randint(12, 24) * 60 * 60
