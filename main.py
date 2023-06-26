@@ -1,4 +1,4 @@
-from newletter_gpt.feeds import FeedSource,get_url
+from newletter_gpt.feeds import FeedSource, get_img_url
 from newletter_gpt.prompts import gen_summary_and_tags_via_llm
 import random
 import time
@@ -55,7 +55,7 @@ if __name__ == "__main__":
                                         or tags.neural_rendering or tags.digital_human) \
                                        and not (tags.consumer_electronics or tags.robotics)
                             if relevant:
-                                img_url = get_url(item.link)
+                                img_url = get_img_url(item)
                                 feed_data.append((item.title, item.link, item.published, item.with_html_noise,
                                                   item.content, item.source, item.summary,
                                                   item.tags.aigc, item.tags.digital_human, item.tags.neural_rendering,

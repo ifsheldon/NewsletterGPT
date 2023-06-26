@@ -5,6 +5,5 @@ openai
 guidance
 mysql-connector-python
 oss2
-os
 requests_html
 easyocr

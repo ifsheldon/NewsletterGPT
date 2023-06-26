@@ -11,6 +11,7 @@ import easyocr
 import oss2
 import os
 from requests_html import HTMLSession
+import argparse
 
 @dataclass
 class Tags:
@@ -135,29 +136,30 @@ def parse_rss(url: str, source: str) -> List[FeedItem]:
     return feed_items
 
 
-def get_url(url):
-    img_url = "None"
-    if "qbitai" in url:
-        img_url = liangZiWei(url)
-    if "jiqizhixin" in url:
-        img_url = jiQi(url)
-    if "weixin" in url:
-        img_url = weiXin(url)
+def get_img_url(item):
+    if item.source == "量子位":
+        img_url = liangZiWei(item.link)
+    elif item.source == "机器之心":
+        img_url = jiQi(item.link)
+    elif item.source == "新智元":
+        img_url = weiXin(item.link)
+    else:
+        img_url = 'None'
     return img_url
 
 
-def liangZiWei(web):
+def liangZiWei(web_url):
     urls=[]
     headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36'
     }
 
-    f = requests.get(web, headers=headers).text
+    f = requests.get(web_url, headers=headers).text
     s = BeautifulSoup(f,'lxml')
     s_imgs = s.find_all('img')
     for s_img in s_imgs:
         if "http" not in s_img['src']:
-            img_url = 'http://www.qbitai.com' + s_img['src']
+            img_url = 'https://www.qbitai.com' + s_img['src']
             urls.append(img_url)
 
     if len(urls)<2:
@@ -166,9 +168,9 @@ def liangZiWei(web):
         url = urls[1]
     return url
 
-def jiQi(web):
+def jiQi(web_url):
     urls=[]
-    f = requests.get(web).text
+    f = requests.get(web_url).text
     s = BeautifulSoup(f,'lxml')
     s_imgs = s.find_all('img',attrs = {'logo' : False})
     for s_img in s_imgs:
@@ -181,9 +183,9 @@ def jiQi(web):
         url = urls[0]
     return url
 
-def weiXin(web): 
+def weiXin(web_url): 
     session = HTMLSession()
-    r = session.get(web)
+    r = session.get(web_url)
     r.html.render() 
     html_content = r.html.html
     s_imgs = r.html.find('img')
@@ -199,7 +201,7 @@ def weiXin(web):
     
     url = urls[0]
     html = requests.get(url)
-    name = web[27:]+'.jpg'
+    name = web_url[27:]+'.jpg'
     with open(name, 'wb') as file:
         file.write(html.content)
 
@@ -210,12 +212,15 @@ def weiXin(web):
             if result[0][1] =='此图片来自微信公众平台':
                 url = "None"
                 return url
-    access_key_id = 'bo71Pp26DgpIT9vW'
-    access_key_secret = 'r2FaziaNDqBgv4kDQIjgAbcTazv0kB'
-    bucket_name = 'gempoll-ai'
-    endpoint = 'http://oss-cn-shanghai.aliyuncs.com'
-    auth = oss2.Auth(access_key_id, access_key_secret)
-    bucket = oss2.Bucket(auth, endpoint, bucket_name)
+
+    parser = argparse.ArgumentParser(description="oss connecter")
+    parser.add_argument("--access_key_id", type=str)
+    parser.add_argument("--access_key_secret", type=str)
+    parser.add_argument("--bucket_name", type=str)
+    parser.add_argument("--endpoint", type=str)
+    args = parser.parse_args()
+    auth = oss2.Auth(args.access_key_id, args.access_key_secret)
+    bucket = oss2.Bucket(auth, args.endpoint, args.bucket_name)
 
     object_key = name
     local_file = name
