@@ -142,12 +142,12 @@ def get_img_url(item):
     elif item.source == "机器之心":
         img_url = jiQi(item.link)
     elif item.source == "新智元":
-        img_url = weiXin(item.link)
+        img_url = xinZhiYuan(item.link)
     else:
         img_url = 'None'
     return img_url
 
-
+#get the image url of the article from liangZiWei
 def liangZiWei(web_url):
     urls=[]
     headers = {
@@ -168,6 +168,7 @@ def liangZiWei(web_url):
         url = urls[1]
     return url
 
+#get the image url of the article from jiQiZhiXin
 def jiQi(web_url):
     urls=[]
     f = requests.get(web_url).text
@@ -183,7 +184,8 @@ def jiQi(web_url):
         url = urls[0]
     return url
 
-def weiXin(web_url,args): 
+#get the image url of the article from xinZhiYuan
+def xinZhiYuan(web_url,args): 
     session = HTMLSession()
     r = session.get(web_url)
     r.html.render() 
@@ -200,6 +202,8 @@ def weiXin(web_url,args):
     
     url = urls[0]
     html = requests.get(url)
+
+    #create a temporary file
     name = web_url[27:]+'.jpg'
     with open(name, 'wb') as file:
         file.write(html.content)
@@ -212,12 +216,13 @@ def weiXin(web_url,args):
                 url = "None"
                 return url
 
+    # upload and delete the temporary file
     auth = oss2.Auth(args.access_key_id, args.access_key_secret)
     bucket = oss2.Bucket(auth, args.endpoint, args.bucket_name)
-
     object_key = name
     local_file = name
     bucket.put_object_from_file(object_key, local_file)
-    url = 'https://gempoll-ai.oss-cn-shanghai.aliyuncs.com/'+name
+    url = (f"https://{args.bucket_name}.{args.endpoint}/{name}")
     os.remove(name)
+
     return url
