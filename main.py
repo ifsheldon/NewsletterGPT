@@ -43,25 +43,24 @@ if __name__ == "__main__":
         cursor.execute("SELECT link from ai_reports")
         links_in_db = cursor.fetchall()
         links_in_db = set(link[0] for link in links_in_db)
-        sql_op = "INSERT INTO ai_reports (title, link, publish_time, with_html_noise, content, source, summary, aigc, digital_human, neural_rendering, computer_graphics, computer_vision, robotics, consumer_electronics,img_url) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s)"
+        sql_op = "INSERT INTO ai_reports (title, link, publish_time, with_html_noise, content, source, summary, aigc, digital_human, neural_rendering, computer_graphics, computer_vision, robotics, consumer_electronics, img_url) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s)"
         logger.info("Enter loop")
         while True:
             for feed_name, feed_source in feed_sources.items():
-                feed_items, is_updated, new_items = feed_source.get_feeds()
-                if is_updated:
-                    # save relevant feeds
-                    feed_data = []
-                    for item in new_items:
-                        if item.link in links_in_db:
-                            continue
-                        try:
-                            logger.info(
-                                f"Try to generate tags and summary for {item.title}: {item.link}"
-                            )
-                            gen_summary_and_tags_via_llm(
-                                item,
-                                api_base=args.api_base,
-                                api_key=args.api_key)
+                try:
+                    logger.info(f"Getting updates from {feed_source.name}")
+                    feed_items, is_updated, new_items = feed_source.get_feeds()
+                    if is_updated:
+                        # save relevant feeds
+                        feed_data = []
+                        for item in new_items:
+                            if item.link in links_in_db:
+                                continue
+
+                            logger.info(f"Try to generate tags and summary for {item.title}: {item.link}")
+                            gen_summary_and_tags_via_llm(item,
+                                                         api_base=args.api_base,
+                                                         api_key=args.api_key)
                             tags = item.tags
                             relevant = (tags.aigc or tags.computer_vision or tags.computer_graphics
                                         or tags.neural_rendering or tags.digital_human) \
@@ -83,15 +82,13 @@ if __name__ == "__main__":
                                             f"  link: {item.link}\n"
                                             f"  published: {item.published}\n"
                                             f"  source: {item.source}\n\n")
-                        except Exception as e:
-                            logger.warning(f"exception throws: {e}")
 
-                    try:
                         if len(feed_data) > 0:
                             cursor.executemany(sql_op, feed_data)
                             conn.commit()
-                    except Exception as e:
-                        logger.warning(f"exception throws: {e}")
+
+                except Exception as e:
+                    logger.warning(f"exception throws: {e}")
 
             # sleep for a random time between 12 and 24 hours
             sleep_time = random.randint(12, 24) * 60 * 60
