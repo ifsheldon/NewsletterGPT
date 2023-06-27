@@ -4,8 +4,12 @@ import logging
 
 logger = logging.getLogger("NewsletterGPT")
 
-def gen_summary_and_tags_via_llm(feed_item: FeedItem, api_base: str, api_key: str):
-    # Notice: NEED TO MODIFY guidance/llms/_openai.py:315 IF YOU ARE USING AZURE OPENAI SERVICE
+
+def gen_summary_and_tags_via_llm(feed_item: FeedItem,
+                                 api_base: str,
+                                 api_key: str,
+                                 chatgpt_deployment_name: str,
+                                 completion_deployment_name: str):
     # truncate content, max 3000 Chinese and English character
     item_content = feed_item.content[:3000]
     logger.info(f"Generating summary for {feed_item.title}")
@@ -13,6 +17,7 @@ def gen_summary_and_tags_via_llm(feed_item: FeedItem, api_base: str, api_key: st
                                         api_base=api_base,
                                         api_type="azure",
                                         api_version="2023-03-15-preview",
+                                        deployment_id=chatgpt_deployment_name,
                                         api_key=api_key)
     create_plan = guidance('''
 {{#user~}}
@@ -48,6 +53,7 @@ def gen_summary_and_tags_via_llm(feed_item: FeedItem, api_base: str, api_key: st
                                         api_base=api_base,
                                         api_type="azure",
                                         api_version="2022-12-01",
+                                        deployment_id=completion_deployment_name,
                                         api_key=api_key)
 
     # truncate content, max 1200 Chinese and English character

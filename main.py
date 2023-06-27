@@ -10,6 +10,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("NewsletterGPT")
 logger.setLevel("INFO")
 
+CHATGPT_DEPLOYMENT_NAME = "chatgpt"
+COMPLETION_DEPLOYMENT_NAME = "davinci-completion"
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fetcher of feeds")
     parser.add_argument("--db-user", type=str, help="username in SQL DB")
@@ -60,7 +63,9 @@ if __name__ == "__main__":
                             logger.info(f"Try to generate tags and summary for {item.title}: {item.link}")
                             gen_summary_and_tags_via_llm(item,
                                                          api_base=args.api_base,
-                                                         api_key=args.api_key)
+                                                         api_key=args.api_key,
+                                                         chatgpt_deployment_name=CHATGPT_DEPLOYMENT_NAME,
+                                                         completion_deployment_name=COMPLETION_DEPLOYMENT_NAME)
                             tags = item.tags
                             relevant = (tags.aigc or tags.computer_vision or tags.computer_graphics
                                         or tags.neural_rendering or tags.digital_human) \
