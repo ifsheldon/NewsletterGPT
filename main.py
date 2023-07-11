@@ -29,13 +29,9 @@ if __name__ == "__main__":
 
     feed_sources = {
         "机器之心":
-        FeedSource("机器之心", "https://www.jiqizhixin.com/rss"),
+            FeedSource("机器之心", "https://www.jiqizhixin.com/rss"),
         "量子位":
-        FeedSource("量子位", "https://www.qbitai.com/rss"),
-        "新智元":
-        FeedSource(
-            "新智元",
-            "https://feed.hamibot.com/api/feeds/61aa18e9486e3727fb090ba1"),
+            FeedSource("量子位", "https://www.qbitai.com/rss"),
     }
 
     with mysql.connector.connect(user=args.db_user,
