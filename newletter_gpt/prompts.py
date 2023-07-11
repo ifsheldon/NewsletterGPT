@@ -11,7 +11,7 @@ def gen_summary_and_tags_via_llm(feed_item: FeedItem,
                                  chatgpt_deployment_name: str,
                                  completion_deployment_name: str):
     # truncate content, max 3000 Chinese and English character
-    item_content = feed_item.content[:3000]
+    item_content = feed_item.content[:5000]
     logger.info(f"Generating summary for {feed_item.title}")
     guidance.llm = guidance.llms.OpenAI(model="gpt-3.5-turbo",
                                         api_base=api_base,

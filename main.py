@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("NewsletterGPT")
 logger.setLevel("INFO")
 
-CHATGPT_DEPLOYMENT_NAME = "chatgpt"
+CHATGPT_DEPLOYMENT_NAME = "chatgpt-long"
 COMPLETION_DEPLOYMENT_NAME = "davinci-completion"
 
 if __name__ == "__main__":
