@@ -29,8 +29,6 @@ def get_updates(configs, feed_sources):
                 logger.info(f"Getting updates from {feed_source.name}")
                 feed_items, is_updated, new_items = feed_source.get_feeds()
                 if is_updated:
-                    # save relevant feeds
-                    feed_data = []
                     for item in new_items:
                         if item.link in links_in_db:
                             continue
@@ -47,24 +45,23 @@ def get_updates(configs, feed_sources):
                                    and not (tags.consumer_electronics or tags.robotics)
                         if relevant:
                             img_url = get_img_url(item, configs)
-                            feed_data.append((item.title, item.link, item.published,
-                                              item.with_html_noise, item.content,
-                                              item.source, item.summary, item.tags.aigc,
-                                              item.tags.digital_human,
-                                              item.tags.neural_rendering,
-                                              item.tags.computer_graphics,
-                                              item.tags.computer_vision,
-                                              item.tags.robotics,
-                                              item.tags.consumer_electronics, img_url))
-                            logger.info(f"Try to add one record:\n"
+                            feed_data = (item.title, item.link, item.published,
+                                         item.with_html_noise, item.content,
+                                         item.source, item.summary, item.tags.aigc,
+                                         item.tags.digital_human,
+                                         item.tags.neural_rendering,
+                                         item.tags.computer_graphics,
+                                         item.tags.computer_vision,
+                                         item.tags.robotics,
+                                         item.tags.consumer_electronics, img_url)
+
+                            cursor.execute(sql_op, feed_data)
+                            conn.commit()
+                            logger.info(f"Added one record:\n"
                                         f"  title: {item.title}\n"
                                         f"  link: {item.link}\n"
                                         f"  published: {item.published}\n"
                                         f"  source: {item.source}\n\n")
-
-                    if len(feed_data) > 0:
-                        cursor.executemany(sql_op, feed_data)
-                        conn.commit()
 
             except Exception as e:
                 logger.warning(f"exception throws: {e}")
