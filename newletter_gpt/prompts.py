@@ -1,5 +1,7 @@
 import json
 
+from func_timeout import func_set_timeout
+
 from newletter_gpt.feeds import FeedItem, Tags
 import logging
 import openai
@@ -7,6 +9,7 @@ import openai
 logger = logging.getLogger("NewsletterGPT")
 
 
+@func_set_timeout(40.0)
 def gen_summary_and_tags_via_llm(feed_item: FeedItem,
                                  api_base: str,
                                  api_key: str,

@@ -7,3 +7,4 @@ oss2
 requests_html
 easyocr
 apscheduler
+func-timeout
