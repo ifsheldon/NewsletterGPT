@@ -2,7 +2,6 @@ python-dateutil
 requests
 beautifulsoup4
 openai
-guidance >= 0.0.61
 mysql-connector-python
 oss2
 requests_html

@@ -10,7 +10,6 @@ logger = logging.getLogger("NewsletterGPT")
 logger.setLevel("INFO")
 
 CHATGPT_DEPLOYMENT_NAME = "chatgpt-long"
-COMPLETION_DEPLOYMENT_NAME = "davinci-completion"
 SLEEP_HOURS = 12
 
 
@@ -40,9 +39,9 @@ def get_updates(configs, feed_sources):
                         gen_summary_and_tags_via_llm(item,
                                                      api_base=configs.api_base,
                                                      api_key=configs.api_key,
-                                                     chatgpt_deployment_name=CHATGPT_DEPLOYMENT_NAME,
-                                                     completion_deployment_name=COMPLETION_DEPLOYMENT_NAME)
+                                                     chatgpt_deployment_name=CHATGPT_DEPLOYMENT_NAME)
                         tags = item.tags
+                        logger.info(f"""Tags for "{item.title}" is {tags}""")
                         relevant = (tags.aigc or tags.computer_vision or tags.computer_graphics
                                     or tags.neural_rendering or tags.digital_human) \
                                    and not (tags.consumer_electronics or tags.robotics)
