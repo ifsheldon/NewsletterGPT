@@ -22,7 +22,7 @@ def gen_summary_and_tags_via_llm(feed_item: FeedItem,
     # truncate content, max ~5000 Chinese and English character
     item_content = feed_item.content[:7000]
     function_name = "article_record"
-    logger.info(f"Generating summary and tags for {feed_item.title}")
+    logger.info(f"Generating summary and tags for \"{feed_item.title}\"")
     user_message = f"""
 帮我总结文章并且给文章打标签。
 
